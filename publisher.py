@@ -214,7 +214,7 @@ def write_from_source(article):
             "https://api.deepseek.com/chat/completions",
             headers={"Authorization": f"Bearer {DEEPSEEK_KEY}",
                      "Content-Type": "application/json"},
-            json={"model": "deepseek-v3-0324",
+            json={"model": "deepseek-v4-flash",
                   "messages": [{"role": "user", "content": prompt}],
                   "temperature": 0.7},
             timeout=90,
@@ -224,7 +224,7 @@ def write_from_source(article):
         return content
     except Exception as e:
         print(f"  [DeepSeek] 失败: {e}")
-        return f"<p>{article['title']}</p><p>原文：<a href='{article['url']}'>{article['source']}</a></p>"
+        return None  # 失败时不发布
 
 
 def gen_cn_title(article):
@@ -239,6 +239,7 @@ def gen_cn_title(article):
             json={"model": "deepseek-v3-0324",
                   "messages": [{"role": "user", "content":
                       f"把这个英文标题翻译成吸引人的中文博客标题（10-20字，口语化，有好奇心驱动）：\n{article['title']}\n只输出标题，不加引号"}],
+                  "model": "deepseek-v4-flash",
                   "temperature": 0.6},
             timeout=30,
         )
@@ -312,8 +313,12 @@ def main():
     title_cn = gen_cn_title(article)
     print(f"  中文标题: {title_cn}")
 
-    content  = write_from_source(article)
-    link     = publish_post(title_cn, content, article)
+    content = write_from_source(article)
+    if not content:
+        print("  ⚠️ 内容生成失败，跳过发布")
+        return
+
+    link = publish_post(title_cn, content, article)
 
     if link:
         log.setdefault("used_urls", []).append(article["url"])
