@@ -56,12 +56,8 @@ SOURCES = [
      "url": "https://venturebeat.com/feed/"},
 ]
 
-# 每个时段偏向的分类
-SLOT_CATS = {
-    0:  ["AI副业", "信息差"],      # 08:00 北京
-    6:  ["海外接单", "被动收入"],   # 14:00 北京
-    12: ["跨境电商", "AI副业"],     # 20:00 北京
-}
+# 所有分类，随机轮转保证均匀覆盖
+ALL_CATS = ["AI副业", "海外接单", "信息差", "被动收入", "跨境电商"]
 
 
 # ── 抓取函数 ──────────────────────────────────────────────────────────────────
@@ -158,21 +154,35 @@ def save_log(log):
 
 
 def pick_article(log):
-    slot_key = min(HOUR_U // 6, 2) * 6  # 0, 6, 12
-    preferred = SLOT_CATS.get(slot_key, ["AI副业"])
     used_urls = set(log.get("used_urls", []))
 
-    # 先试偏好分类，再试全部
-    for cats in [preferred, None]:
-        sources = [s for s in SOURCES if cats is None or s["cat"] in cats]
+    # 统计今天各分类已发数量，优先发数量少的
+    today_counts = {}
+    for p in log.get("published", []):
+        if p.get("date") == TODAY:
+            today_counts[p.get("cat", "")] = today_counts.get(p.get("cat",""), 0) + 1
+
+    # 按今日发布数从少到多排序分类
+    sorted_cats = sorted(ALL_CATS, key=lambda c: today_counts.get(c, 0))
+
+    for cat in sorted_cats:
+        sources = [s for s in SOURCES if s["cat"] == cat]
         random.shuffle(sources)
         for source in sources:
             articles = fetch_source(source)
             fresh = [a for a in articles if a["url"] not in used_urls]
             if fresh:
                 article = random.choice(fresh[:4])
-                article["cat"] = source["cat"]
+                article["cat"] = cat
                 return article
+
+    # 全分类都试过还没找到，放开used限制
+    for source in random.sample(SOURCES, len(SOURCES)):
+        articles = fetch_source(source)
+        if articles:
+            article = articles[0]
+            article["cat"] = source["cat"]
+            return article
 
     return None
 
