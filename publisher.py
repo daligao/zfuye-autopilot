@@ -228,7 +228,17 @@ def write_from_source(article):
         return None  # 失败时不发布
 
 
-SHARE_LOCK_HTML = """
+def wrap_with_lock(content, post_url=""):
+    """把文章内容包裹进分享锁，post_url已知时直接嵌入静态二维码"""
+    import re
+    plain = re.sub(r'<[^>]+>', '', content)
+    preview = plain[:200].strip() + '……'
+
+    unlock_url = (post_url.rstrip('/') + '?su=1') if post_url else '#'
+    qr_url = ('https://api.qrserver.com/v1/create-qr-code/?size=160x160&data='
+               + requests.utils.quote(unlock_url, safe=''))
+
+    return f"""
 <div id="su-preview-block">
 <p style="color:#666;font-size:14px;line-height:1.8">{preview}</p>
 </div>
@@ -241,75 +251,53 @@ SHARE_LOCK_HTML = """
   <p style="color:#666;margin:0 0 16px;font-size:14px">希望你能把本文分享给有需要的朋友——这是对我们最好的支持。</p>
   <div style="display:inline-block;padding:10px;background:#fff;border-radius:8px;
     border:1px solid #eee;margin-bottom:12px">
-    <img id="su-qr-img" src="" width="160" height="160" alt="扫码解锁"/>
+    <img src="{qr_url}" width="160" height="160" alt="扫码解锁"/>
   </div>
   <p style="color:#aaa;font-size:12px;margin:0 0 12px">手机微信扫码 · 扫后即解锁全文</p>
-  <a id="su-unlock-btn" href="javascript:void(0)" onclick="suUnlock()"
+  <a id="su-unlock-btn" href="{unlock_url}"
     style="display:inline-block;background:#f0a500;color:#fff;padding:10px 28px;
-    border-radius:8px;text-decoration:none;font-size:14px;font-weight:bold;cursor:pointer">
+    border-radius:8px;text-decoration:none;font-size:14px;font-weight:bold">
     已扫码，解锁全文 →
   </a>
-  <div id="su-countdown" style="display:none;margin-top:14px;padding:14px;
-    background:#fff8e1;border-radius:8px;border:1px solid #ffe082">
-    <p style="margin:0 0 6px;font-size:15px;color:#e65100;font-weight:bold">
-      ⏳ <span id="su-cd-n">8</span> 秒后解锁全文…
-    </p>
-    <p style="margin:0;font-size:13px;color:#888">顺手把文章转发给有需要的朋友，帮助更多人 🙏</p>
-  </div>
 </div>
 
 <div id="su-full-content" style="display:none">
-{full_content}
+{content}
 </div>
 
-<script>
+<script type="text/javascript">
 (function(){{
   var key = 'su_' + window.location.pathname;
-  var url = window.location.href.split('?')[0] + '?su=1';
-  var img = document.getElementById('su-qr-img');
-  if(img) img.src = 'https://api.qrserver.com/v1/create-qr-code/?size=160x160&data='
-                  + encodeURIComponent(url);
-  // 已解锁过 or 通过别人分享的二维码进来 → 直接解锁
   if(localStorage.getItem(key)==='1' || window.location.search.indexOf('su=1')!==-1){{
     suReveal();
   }}
+  document.getElementById('su-unlock-btn').addEventListener('click', function(e){{
+    if(window.location.search.indexOf('su=1')!==-1) return;
+    e.preventDefault();
+    suCountdown();
+  }});
 }})();
-
-function suUnlock(){{
-  var btn = document.getElementById('su-unlock-btn');
-  var cd  = document.getElementById('su-countdown');
-  if(btn) btn.style.display = 'none';
-  if(cd)  cd.style.display  = 'block';
-  var n = 8;
-  document.getElementById('su-cd-n').textContent = n;
-  var t = setInterval(function(){{
-    n--;
-    var el = document.getElementById('su-cd-n');
-    if(el) el.textContent = n;
-    if(n <= 0){{ clearInterval(t); suReveal(); }}
-  }}, 1000);
+function suCountdown(){{
+  var btn=document.getElementById('su-unlock-btn');
+  btn.textContent='顺手转发给朋友，8秒后解锁…';
+  btn.style.background='#888';
+  var n=8;
+  var t=setInterval(function(){{
+    n--; btn.textContent='顺手转发给朋友，'+n+'秒后解锁…';
+    if(n<=0){{clearInterval(t);suReveal();}}
+  }},1000);
 }}
-
 function suReveal(){{
-  localStorage.setItem('su_' + window.location.pathname, '1');
-  var gate = document.getElementById('su-lock-gate');
-  var pre  = document.getElementById('su-preview-block');
-  var full = document.getElementById('su-full-content');
-  if(gate) gate.style.display='none';
-  if(pre)  pre.style.display='none';
-  if(full) full.style.display='block';
+  localStorage.setItem('su_'+window.location.pathname,'1');
+  var gate=document.getElementById('su-lock-gate');
+  var pre=document.getElementById('su-preview-block');
+  var full=document.getElementById('su-full-content');
+  if(gate)gate.style.display='none';
+  if(pre)pre.style.display='none';
+  if(full)full.style.display='block';
 }}
 </script>
 """
-
-
-def wrap_with_lock(content):
-    """把文章内容包裹进分享锁"""
-    import re
-    # 取前200字作预览
-    plain = re.sub(r'<[^>]+>', '', content)
-    preview = plain[:200].strip() + '……'
-    return SHARE_LOCK_HTML.format(preview=preview, full_content=content)
 
 
 def gen_cn_title(article):
@@ -320,14 +308,19 @@ def gen_cn_title(article):
             "https://api.deepseek.com/chat/completions",
             headers={"Authorization": f"Bearer {DEEPSEEK_KEY}",
                      "Content-Type": "application/json"},
-            json={"model": "deepseek-v4-flash",
-                  "messages": [{"role": "user", "content":
-                      f"把这个英文标题翻译成吸引人的中文博客标题（10-20字，口语化，有好奇心驱动）：\n{article['title']}\n只输出标题，不加引号"}],
-                  "temperature": 0.6},
+            json={
+                "model": "deepseek-v4-flash",
+                "messages": [{"role": "user", "content":
+                    f"把这个英文标题翻译成吸引人的中文博客标题（10-20字，口语化，有好奇心驱动）：\n{article['title']}\n只输出标题，不加引号"}],
+                "temperature": 0.6
+            },
             timeout=30,
         )
-        return r.json()["choices"][0]["message"]["content"].strip()
-    except:
+        title = r.json()["choices"][0]["message"]["content"].strip()
+        print(f"  [标题翻译] {title}")
+        return title
+    except Exception as e:
+        print(f"  [标题翻译] 失败: {e}，使用原标题")
         return article["title"]
 
 
@@ -350,14 +343,14 @@ def get_or_create_category(name, auth_h):
     except: return None
 
 
-def publish_post(title_cn, content, article):
+def publish_post(title_cn, raw_content, article):
     cred   = b64encode(f"{WP_USER}:{WP_APP_PASS}".encode()).decode()
     auth_h = {"Authorization": f"Basic {cred}"}
     cat_id = get_or_create_category(CAT_CN.get(article["cat"], article["cat"]), auth_h)
 
     payload = {
-        "title":   title_cn,
-        "content": content,
+        "title":   {"raw": title_cn},
+        "content": {"raw": raw_content},   # raw 格式绕过 wp_kses 过滤，保留 script 标签
         "status":  "publish",
         "format":  "standard",
     }
@@ -370,14 +363,30 @@ def publish_post(title_cn, content, article):
                           json=payload, timeout=20)
         data = r.json()
         if "id" in data:
-            print(f"  ✅ 发布成功: {data['link']}")
-            return data["link"]
+            post_id   = data["id"]
+            post_link = data["link"]
+            print(f"  ✅ 发布成功: {post_link}")
+            return post_id, post_link
         else:
             print(f"  ❌ 发布失败: {data}")
-            return None
+            return None, None
     except Exception as e:
         print(f"  ❌ 异常: {e}")
-        return None
+        return None, None
+
+
+def update_post_content(post_id, raw_content):
+    """第二步：用已知 URL 更新内容（静态二维码）"""
+    cred   = b64encode(f"{WP_USER}:{WP_APP_PASS}".encode()).decode()
+    auth_h = {"Authorization": f"Basic {cred}", "Content-Type": "application/json"}
+    try:
+        requests.post(f"{WP_BASE}/posts/{post_id}",
+                      headers=auth_h,
+                      json={"content": {"raw": raw_content}},
+                      timeout=20)
+        print(f"  ✅ 二维码已更新")
+    except Exception as e:
+        print(f"  ⚠️ 更新二维码失败: {e}")
 
 
 # ── 主流程 ────────────────────────────────────────────────────────────────────
@@ -401,8 +410,14 @@ def main():
         print("  ⚠️ 内容生成失败，跳过发布")
         return
 
-    locked_content = wrap_with_lock(content)
-    link = publish_post(title_cn, locked_content, article)
+    # 第一步：先发布（二维码URL占位）
+    placeholder = wrap_with_lock(content, "")
+    post_id, link = publish_post(title_cn, placeholder, article)
+
+    if post_id and link:
+        # 第二步：用真实 URL 更新静态二维码
+        final_content = wrap_with_lock(content, link)
+        update_post_content(post_id, final_content)
 
     if link:
         log.setdefault("used_urls", []).append(article["url"])
