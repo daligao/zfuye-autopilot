@@ -228,8 +228,67 @@ def write_from_source(article):
         return None  # 失败时不发布
 
 
+SHARE_LOCK_HTML = """
+<div id="su-preview-block">
+<p style="color:#666;font-size:14px;line-height:1.8">{preview}</p>
+</div>
+
+<div id="su-lock-gate" style="border:2px solid #f0a500;border-radius:12px;padding:28px 20px;
+  text-align:center;background:#fffbf0;margin:24px 0;">
+  <div style="font-size:34px;margin-bottom:6px">📲</div>
+  <h3 style="margin:0 0 6px;color:#333;font-size:18px">本文为精华内容</h3>
+  <p style="color:#666;margin:0 0 4px;font-size:14px">本站所有内容永久免费，没有任何收费项目。</p>
+  <p style="color:#666;margin:0 0 16px;font-size:14px">希望你能把本文分享给有需要的朋友——这是对我们最好的支持。</p>
+  <div style="display:inline-block;padding:10px;background:#fff;border-radius:8px;
+    border:1px solid #eee;margin-bottom:12px">
+    <img id="su-qr-img" src="" width="160" height="160" alt="扫码解锁"/>
+  </div>
+  <p style="color:#aaa;font-size:12px;margin:0 0 12px">手机微信扫码 · 扫后即解锁全文</p>
+  <a href="javascript:void(0)" onclick="suUnlock()"
+    style="display:inline-block;background:#f0a500;color:#fff;padding:10px 28px;
+    border-radius:8px;text-decoration:none;font-size:14px;font-weight:bold;cursor:pointer">
+    已扫码，解锁全文 →
+  </a>
+</div>
+
+<div id="su-full-content" style="display:none">
+{full_content}
+</div>
+
+<script>
+(function(){{
+  var key = 'su_' + window.location.pathname;
+  var url = window.location.href.split('?')[0] + '?su=1';
+  var img = document.getElementById('su-qr-img');
+  if(img) img.src = 'https://api.qrserver.com/v1/create-qr-code/?size=160x160&data='
+                  + encodeURIComponent(url);
+  if(localStorage.getItem(key)==='1' || window.location.search.indexOf('su=1')!==-1){{
+    suUnlock();
+  }}
+}})();
+function suUnlock(){{
+  localStorage.setItem('su_' + window.location.pathname, '1');
+  var gate = document.getElementById('su-lock-gate');
+  var pre  = document.getElementById('su-preview-block');
+  var full = document.getElementById('su-full-content');
+  if(gate) gate.style.display='none';
+  if(pre)  pre.style.display='none';
+  if(full) full.style.display='block';
+}}
+</script>
+"""
+
+
+def wrap_with_lock(content):
+    """把文章内容包裹进分享锁"""
+    import re
+    # 取前200字作预览
+    plain = re.sub(r'<[^>]+>', '', content)
+    preview = plain[:200].strip() + '……'
+    return SHARE_LOCK_HTML.format(preview=preview, full_content=content)
+
+
 def gen_cn_title(article):
-    """用AI生成吸引人的中文标题"""
     if not DEEPSEEK_KEY:
         return article["title"]
     try:
@@ -237,10 +296,9 @@ def gen_cn_title(article):
             "https://api.deepseek.com/chat/completions",
             headers={"Authorization": f"Bearer {DEEPSEEK_KEY}",
                      "Content-Type": "application/json"},
-            json={"model": "deepseek-v3-0324",
+            json={"model": "deepseek-v4-flash",
                   "messages": [{"role": "user", "content":
                       f"把这个英文标题翻译成吸引人的中文博客标题（10-20字，口语化，有好奇心驱动）：\n{article['title']}\n只输出标题，不加引号"}],
-                  "model": "deepseek-v4-flash",
                   "temperature": 0.6},
             timeout=30,
         )
@@ -319,7 +377,8 @@ def main():
         print("  ⚠️ 内容生成失败，跳过发布")
         return
 
-    link = publish_post(title_cn, content, article)
+    locked_content = wrap_with_lock(content)
+    link = publish_post(title_cn, locked_content, article)
 
     if link:
         log.setdefault("used_urls", []).append(article["url"])
