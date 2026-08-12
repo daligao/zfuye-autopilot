@@ -2,7 +2,8 @@
   "used_urls": [
     "https://blogs.embarcadero.com/delphi-13-community-edition-is-now-available/",
     "https://gowers.wordpress.com/2026/08/12/what-sort-of-maths-are-llms-good-at/",
-    "https://knownagents.com/insights"
+    "https://knownagents.com/insights",
+    "https://blog.florianherrengt.com/ai-removing-middle-class-software-engineering.html"
   ],
   "published": [
     {
@@ -22,6 +23,12 @@
       "title": "Someone is running mass vulnerability scans, spoofing AI bots like ClaudeBot",
       "source": "Hacker News",
       "url": "https://www.zfuye.org/3907.html"
+    },
+    {
+      "date": "2026-08-12",
+      "title": "AI要干掉程序员的中层？",
+      "source": "Hacker News",
+      "url": "https://www.zfuye.org/3908.html"
     }
   ]
 }
