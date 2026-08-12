@@ -244,11 +244,18 @@ SHARE_LOCK_HTML = """
     <img id="su-qr-img" src="" width="160" height="160" alt="扫码解锁"/>
   </div>
   <p style="color:#aaa;font-size:12px;margin:0 0 12px">手机微信扫码 · 扫后即解锁全文</p>
-  <a href="javascript:void(0)" onclick="suUnlock()"
+  <a id="su-unlock-btn" href="javascript:void(0)" onclick="suUnlock()"
     style="display:inline-block;background:#f0a500;color:#fff;padding:10px 28px;
     border-radius:8px;text-decoration:none;font-size:14px;font-weight:bold;cursor:pointer">
     已扫码，解锁全文 →
   </a>
+  <div id="su-countdown" style="display:none;margin-top:14px;padding:14px;
+    background:#fff8e1;border-radius:8px;border:1px solid #ffe082">
+    <p style="margin:0 0 6px;font-size:15px;color:#e65100;font-weight:bold">
+      ⏳ <span id="su-cd-n">8</span> 秒后解锁全文…
+    </p>
+    <p style="margin:0;font-size:13px;color:#888">顺手把文章转发给有需要的朋友，帮助更多人 🙏</p>
+  </div>
 </div>
 
 <div id="su-full-content" style="display:none">
@@ -262,11 +269,28 @@ SHARE_LOCK_HTML = """
   var img = document.getElementById('su-qr-img');
   if(img) img.src = 'https://api.qrserver.com/v1/create-qr-code/?size=160x160&data='
                   + encodeURIComponent(url);
+  // 已解锁过 or 通过别人分享的二维码进来 → 直接解锁
   if(localStorage.getItem(key)==='1' || window.location.search.indexOf('su=1')!==-1){{
-    suUnlock();
+    suReveal();
   }}
 }})();
+
 function suUnlock(){{
+  var btn = document.getElementById('su-unlock-btn');
+  var cd  = document.getElementById('su-countdown');
+  if(btn) btn.style.display = 'none';
+  if(cd)  cd.style.display  = 'block';
+  var n = 8;
+  document.getElementById('su-cd-n').textContent = n;
+  var t = setInterval(function(){{
+    n--;
+    var el = document.getElementById('su-cd-n');
+    if(el) el.textContent = n;
+    if(n <= 0){{ clearInterval(t); suReveal(); }}
+  }}, 1000);
+}}
+
+function suReveal(){{
   localStorage.setItem('su_' + window.location.pathname, '1');
   var gate = document.getElementById('su-lock-gate');
   var pre  = document.getElementById('su-preview-block');
