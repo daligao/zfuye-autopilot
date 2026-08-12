@@ -159,7 +159,7 @@ def pick_article(log):
     # 统计今天各分类已发数量，优先发数量少的
     today_counts = {}
     for p in log.get("published", []):
-        if p.get("date") == TODAY:
+        if isinstance(p, dict) and p.get("date") == TODAY:
             today_counts[p.get("cat", "")] = today_counts.get(p.get("cat",""), 0) + 1
 
     # 按今日发布数从少到多排序分类
@@ -175,6 +175,7 @@ def pick_article(log):
                 article = random.choice(fresh[:4])
                 article["cat"] = cat
                 return article
+
 
     # 全分类都试过还没找到，放开used限制
     for source in random.sample(SOURCES, len(SOURCES)):
