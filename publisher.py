@@ -1,10 +1,12 @@
 #!/usr/bin/env python3
 """
 zfuye.org 自动发布机器人
-每次运行：选题 → DeepSeek写文章 → WordPress发布
+真实来源抓取 → DeepSeek提炼翻译 → WordPress发布
 """
 
-import os, json, random, datetime, requests
+import os, json, random, datetime, requests, re, time
+import xml.etree.ElementTree as ET
+from html import unescape
 from base64 import b64encode
 
 DEEPSEEK_KEY = os.environ.get("DEEPSEEK_KEY", "")
@@ -12,78 +14,141 @@ WP_USER      = os.environ.get("WP_USER", "")
 WP_APP_PASS  = os.environ.get("WP_APP_PASS", "")
 WP_BASE      = "https://www.zfuye.org/wp-json/wp/v2"
 
-TODAY = datetime.date.today().isoformat()
-NOW_H = datetime.datetime.utcnow().hour  # 0=早, 6=午, 12=晚
+TODAY  = datetime.date.today().isoformat()
+HOUR_U = datetime.datetime.utcnow().hour  # 0=早, 6=午, 12=晚
 
-# ── 选题库 ────────────────────────────────────────────────────────────────────
-TOPICS = [
-    # AI副业
-    {"title": "用ChatGPT接单月入3000美元的5种方法", "cat": "AI副业"},
-    {"title": "Midjourney帮人设计Logo，海外Fiverr接单实操", "cat": "AI副业"},
-    {"title": "AI写作工具副业：每天2小时，一个月能赚多少", "cat": "AI副业"},
-    {"title": "用Claude帮外国人写商业计划书，客单价500美元", "cat": "AI副业"},
-    {"title": "AI翻译副业：不需要会外语也能接国际翻译订单", "cat": "AI副业"},
-    {"title": "用AI做YouTube字幕，海外博主愿意付多少钱", "cat": "AI副业"},
-    {"title": "NoCode工具+AI，帮小企业建站月入1万的路径", "cat": "AI副业"},
-    {"title": "AI配音副业：ElevenLabs接单，定价策略全解", "cat": "AI副业"},
-
-    # 海外接单平台
-    {"title": "Fiverr新手开店：从0到第一单的完整操作", "cat": "海外接单"},
-    {"title": "Upwork vs Fiverr：2026年哪个平台更容易接到单", "cat": "海外接单"},
-    {"title": "Toptal门槛这么高，真的值得申请吗", "cat": "海外接单"},
-    {"title": "海外客户为什么愿意付高价：定价心理学实战", "cat": "海外接单"},
-    {"title": "从Freelancer到自建客户群：海外接单进阶路径", "cat": "海外接单"},
-    {"title": "99designs接单实操：设计师海外变现第一步", "cat": "海外接单"},
-    {"title": "Contra平台详解：不收佣金的海外接单新选择", "cat": "海外接单"},
-
-    # 信息差套利
-    {"title": "国内外信息差：这5个领域现在还有巨大套利空间", "cat": "信息差"},
-    {"title": "海外SaaS工具搬运，如何合法赚取差价", "cat": "信息差"},
-    {"title": "跨境知识付费：把国内经验卖给海外华人", "cat": "信息差"},
-    {"title": "亚马逊热销品回流国内，信息差套利实操", "cat": "信息差"},
-    {"title": "国外便宜订阅合租：Spotify/Netflix拼车站月入分析", "cat": "信息差"},
-    {"title": "海外问卷调研平台：信息差变现最简单的方式", "cat": "信息差"},
-
-    # 被动收入
-    {"title": "数字产品被动收入：Gumroad/Lemon Squeezy卖什么最好", "cat": "被动收入"},
-    {"title": "Notion模板卖钱：月入几千的人都在做什么", "cat": "被动收入"},
-    {"title": "联盟营销入门：0粉丝也能开始的推广赚钱方法", "cat": "被动收入"},
-    {"title": "Medium付费会员分成：写英文文章能赚多少", "cat": "被动收入"},
-    {"title": "博客Hostinger联盟佣金：一次推荐能赚多少钱", "cat": "被动收入"},
-    {"title": "股权分红+海外股市：普通人被动收入组合方案", "cat": "被动收入"},
-    {"title": "Printful/Printify按需印刷：不囤货的副业生意", "cat": "被动收入"},
-
-    # 跨境电商
-    {"title": "2026年速卖通还值得做吗：真实数据分析", "cat": "跨境电商"},
-    {"title": "亚马逊FBA新手指南：选品到发货全流程", "cat": "跨境电商"},
-    {"title": "独立站vs平台店：跨境电商新手怎么选", "cat": "跨境电商"},
-    {"title": "TikTok Shop海外小店：流量红利还剩多少", "cat": "跨境电商"},
-    {"title": "代购副业2026：还有没有利润空间详解", "cat": "跨境电商"},
-
-    # 数字游民
-    {"title": "数字游民真实收入：他们靠什么养活自己", "cat": "数字游民"},
-    {"title": "远程工作平台Top10：找到第一份远程工作", "cat": "数字游民"},
-    {"title": "一边旅行一边赚钱：数字游民入门路径", "cat": "数字游民"},
-]
-
-CAT_CN = {
-    "AI副业": "AI副业",
-    "海外接单": "海外接单",
-    "信息差": "信息差套利",
-    "被动收入": "被动收入",
-    "跨境电商": "跨境电商",
-    "数字游民": "数字游民",
-}
-
+HEADERS = {"User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36"}
 LOG_PATH = "data/log.json"
 
+# ── 数据源配置 ────────────────────────────────────────────────────────────────
+SOURCES = [
+    # AI副业
+    {"name": "Hacker News",       "cat": "AI副业",  "type": "hn",
+     "keywords": ["ai","gpt","claude","llm","openai","anthropic","revenue","saas","product","launch","maker","tool"]},
+    {"name": "ProductHunt",       "cat": "AI副业",  "type": "rss",
+     "url": "https://www.producthunt.com/feed"},
+    {"name": "IndieHackers",      "cat": "AI副业",  "type": "rss",
+     "url": "https://www.indiehackers.com/feed.xml"},
 
+    # 海外接单
+    {"name": "Entrepreneur",      "cat": "海外接单", "type": "rss",
+     "url": "https://www.entrepreneur.com/latest.rss"},
+    {"name": "Freelancer Blog",   "cat": "海外接单", "type": "rss",
+     "url": "https://www.freelancer.com/community/feed"},
+
+    # 信息差·副业
+    {"name": "Medium·副业",       "cat": "信息差",   "type": "rss",
+     "url": "https://medium.com/feed/tag/side-hustle"},
+    {"name": "Medium·创业",       "cat": "信息差",   "type": "rss",
+     "url": "https://medium.com/feed/tag/entrepreneurship"},
+    {"name": "DEV.to",            "cat": "信息差",   "type": "devto"},
+
+    # 被动收入
+    {"name": "Medium·被动收入",   "cat": "被动收入", "type": "rss",
+     "url": "https://medium.com/feed/tag/passive-income"},
+    {"name": "Smart Passive Income","cat": "被动收入","type": "rss",
+     "url": "https://www.smartpassiveincome.com/feed/"},
+
+    # 跨境电商
+    {"name": "TechCrunch",        "cat": "跨境电商", "type": "rss",
+     "url": "https://techcrunch.com/feed/"},
+    {"name": "VentureBeat",       "cat": "跨境电商", "type": "rss",
+     "url": "https://venturebeat.com/feed/"},
+]
+
+# 每个时段偏向的分类
+SLOT_CATS = {
+    0:  ["AI副业", "信息差"],      # 08:00 北京
+    6:  ["海外接单", "被动收入"],   # 14:00 北京
+    12: ["跨境电商", "AI副业"],     # 20:00 北京
+}
+
+
+# ── 抓取函数 ──────────────────────────────────────────────────────────────────
+def fetch_rss(source, limit=8):
+    try:
+        r = requests.get(source["url"], headers=HEADERS, timeout=12)
+        root = ET.fromstring(r.content)
+        items = root.findall(".//item")
+        results = []
+        for item in items[:limit]:
+            title = item.find("title")
+            link  = item.find("link")
+            desc  = item.find("description")
+            if title is None or link is None: continue
+            t = unescape((title.text or "").strip())
+            l = (link.text or "").strip()
+            d = unescape(re.sub(r'<[^>]+>', '', (desc.text or "") if desc is not None else "")[:500]).strip()
+            if t and l:
+                results.append({"title": t, "url": l, "summary": d, "source": source["name"]})
+        return results
+    except Exception as e:
+        print(f"  [{source['name']}] 失败: {e}")
+        return []
+
+
+def fetch_hn(source, limit=6):
+    keywords = source.get("keywords", ["ai","saas","startup","revenue"])
+    try:
+        ids = requests.get(
+            "https://hacker-news.firebaseio.com/v0/topstories.json", timeout=10
+        ).json()[:80]
+        results = []
+        for i in ids:
+            try:
+                item = requests.get(
+                    f"https://hacker-news.firebaseio.com/v0/item/{i}.json", timeout=8
+                ).json()
+                title = item.get("title", "")
+                score = item.get("score", 0)
+                url   = item.get("url") or f"https://news.ycombinator.com/item?id={i}"
+                if score > 60 and any(k in title.lower() for k in keywords):
+                    results.append({"title": title, "url": url,
+                                    "summary": f"HN评分: {score}",
+                                    "source": "Hacker News"})
+                    if len(results) >= limit: break
+                time.sleep(0.05)
+            except: continue
+        return results
+    except Exception as e:
+        print(f"  [HN] 失败: {e}")
+        return []
+
+
+def fetch_devto(source, limit=6):
+    keywords = ["ai","side","saas","earn","income","startup","product","tool","freelance"]
+    try:
+        r = requests.get("https://dev.to/api/articles?top=1&per_page=30", timeout=12)
+        results = []
+        for a in r.json():
+            title = a.get("title","")
+            if any(k in title.lower() for k in keywords):
+                results.append({
+                    "title":   title,
+                    "url":     a.get("url",""),
+                    "summary": (a.get("description") or "")[:400],
+                    "source":  "DEV.to",
+                })
+                if len(results) >= limit: break
+        return results
+    except Exception as e:
+        print(f"  [DEV.to] 失败: {e}")
+        return []
+
+
+def fetch_source(source):
+    t = source["type"]
+    if t == "rss":    return fetch_rss(source)
+    if t == "hn":     return fetch_hn(source)
+    if t == "devto":  return fetch_devto(source)
+    return []
+
+
+# ── 选文章 ────────────────────────────────────────────────────────────────────
 def load_log():
     try:
-        with open(LOG_PATH) as f:
-            return json.load(f)
-    except:
-        return {"published": []}
+        with open(LOG_PATH) as f: return json.load(f)
+    except: return {"used_urls": [], "published": []}
 
 
 def save_log(log):
@@ -92,33 +157,47 @@ def save_log(log):
         json.dump(log, f, ensure_ascii=False, indent=2)
 
 
-def pick_topic(log):
-    used = set(log.get("published", []))
-    available = [t for t in TOPICS if t["title"] not in used]
-    if not available:
-        log["published"] = []
-        available = TOPICS[:]
-    topic = random.choice(available)
-    return topic
+def pick_article(log):
+    slot_key = min(HOUR_U // 6, 2) * 6  # 0, 6, 12
+    preferred = SLOT_CATS.get(slot_key, ["AI副业"])
+    used_urls = set(log.get("used_urls", []))
+
+    # 先试偏好分类，再试全部
+    for cats in [preferred, None]:
+        sources = [s for s in SOURCES if cats is None or s["cat"] in cats]
+        random.shuffle(sources)
+        for source in sources:
+            articles = fetch_source(source)
+            fresh = [a for a in articles if a["url"] not in used_urls]
+            if fresh:
+                article = random.choice(fresh[:4])
+                article["cat"] = source["cat"]
+                return article
+
+    return None
 
 
-def write_article(topic):
+# ── AI提炼写作 ────────────────────────────────────────────────────────────────
+def write_from_source(article):
     if not DEEPSEEK_KEY:
-        return f"<p>测试内容：{topic['title']}</p>", []
+        return f"<p>测试：{article['title']}</p>"
 
-    slot = ["早上8点", "下午2点", "晚上8点"][min(NOW_H // 6, 2)]
-    prompt = f"""你是一个专注副业赚钱的中文博客作者，读者是25-40岁想要增加收入的普通人。
+    prompt = f"""你是一个专注副业赚钱的中文博客作者，读者是25-40岁想增加收入的普通人。
 
-请写一篇关于「{topic['title']}」的实用文章。
+以下是一篇英文资讯：
+标题：{article['title']}
+来源：{article['source']}
+摘要/内容：{article.get('summary', '（无摘要）')}
+原文链接：{article['url']}
 
-要求：
-- 800-1000字
-- 口语化、有干货，不要空话
-- 结构：开头（痛点/钩子）+ 正文3-4个要点 + 结尾行动建议
-- 每个要点给出具体可操作的步骤或数字
-- 输出HTML格式（用<h2><p><ul><li>标签），不要输出```html标记
-- 不要写文章标题（标题单独处理）
-- 在结尾自然提到：如果要搭建自己的副业网站，Hostinger是性价比最高的选择之一（用普通文字提及，不要做广告感太强）"""
+请根据这篇文章的核心信息，写一篇800-1000字的中文博客文章：
+- 不要直译，要提炼核心价值点，结合中国读者视角
+- 文章结构：钩子开头 + 3-4个核心要点（每点给具体数字/方法）+ 行动建议
+- 口语化、有干货，读者能直接用
+- HTML格式（用<h2><p><ul><li>），不要```html标记
+- 不要写文章大标题（单独处理）
+- 结尾自然提及：搭副业网站推荐Hostinger（不要广告感）
+- 文末注明：「资讯来源：{article['source']}」"""
 
     try:
         r = requests.post(
@@ -127,43 +206,63 @@ def write_article(topic):
                      "Content-Type": "application/json"},
             json={"model": "deepseek-v3-0324",
                   "messages": [{"role": "user", "content": prompt}],
-                  "temperature": 0.8},
+                  "temperature": 0.7},
             timeout=90,
         )
         content = r.json()["choices"][0]["message"]["content"].strip()
-        tags = [topic["cat"], "副业", "赚钱", "2026"]
-        print(f"  [DeepSeek] 写完 {len(content)} 字")
-        return content, tags
+        print(f"  [DeepSeek] 完成 {len(content)} 字")
+        return content
     except Exception as e:
         print(f"  [DeepSeek] 失败: {e}")
-        return f"<p>{topic['title']}：内容生成失败，请稍后重试。</p>", []
+        return f"<p>{article['title']}</p><p>原文：<a href='{article['url']}'>{article['source']}</a></p>"
 
 
-def get_or_create_category(name, auth_header):
+def gen_cn_title(article):
+    """用AI生成吸引人的中文标题"""
+    if not DEEPSEEK_KEY:
+        return article["title"]
+    try:
+        r = requests.post(
+            "https://api.deepseek.com/chat/completions",
+            headers={"Authorization": f"Bearer {DEEPSEEK_KEY}",
+                     "Content-Type": "application/json"},
+            json={"model": "deepseek-v3-0324",
+                  "messages": [{"role": "user", "content":
+                      f"把这个英文标题翻译成吸引人的中文博客标题（10-20字，口语化，有好奇心驱动）：\n{article['title']}\n只输出标题，不加引号"}],
+                  "temperature": 0.6},
+            timeout=30,
+        )
+        return r.json()["choices"][0]["message"]["content"].strip()
+    except:
+        return article["title"]
+
+
+# ── WordPress发布 ─────────────────────────────────────────────────────────────
+CAT_CN = {
+    "AI副业": "AI副业", "海外接单": "海外接单", "信息差": "信息差",
+    "被动收入": "被动收入", "跨境电商": "跨境电商",
+}
+
+def get_or_create_category(name, auth_h):
     try:
         r = requests.get(f"{WP_BASE}/categories?search={name}&per_page=5",
-                         headers=auth_header, timeout=10)
-        cats = r.json()
-        for c in cats:
-            if c["name"] == name:
-                return c["id"]
+                         headers=auth_h, timeout=10)
+        for c in r.json():
+            if c["name"] == name: return c["id"]
         r2 = requests.post(f"{WP_BASE}/categories",
-                           headers={**auth_header, "Content-Type": "application/json"},
+                           headers={**auth_h, "Content-Type": "application/json"},
                            json={"name": name}, timeout=10)
         return r2.json().get("id")
-    except:
-        return None
+    except: return None
 
 
-def publish_post(topic, content, tags):
-    cred = b64encode(f"{WP_USER}:{WP_APP_PASS}".encode()).decode()
-    auth = {"Authorization": f"Basic {cred}"}
-
-    cat_name = CAT_CN.get(topic["cat"], topic["cat"])
-    cat_id = get_or_create_category(cat_name, auth)
+def publish_post(title_cn, content, article):
+    cred   = b64encode(f"{WP_USER}:{WP_APP_PASS}".encode()).decode()
+    auth_h = {"Authorization": f"Basic {cred}"}
+    cat_id = get_or_create_category(CAT_CN.get(article["cat"], article["cat"]), auth_h)
 
     payload = {
-        "title":   topic["title"],
+        "title":   title_cn,
         "content": content,
         "status":  "publish",
         "format":  "standard",
@@ -172,12 +271,9 @@ def publish_post(topic, content, tags):
         payload["categories"] = [cat_id]
 
     try:
-        r = requests.post(
-            f"{WP_BASE}/posts",
-            headers={**auth, "Content-Type": "application/json"},
-            json=payload,
-            timeout=20,
-        )
+        r = requests.post(f"{WP_BASE}/posts",
+                          headers={**auth_h, "Content-Type": "application/json"},
+                          json=payload, timeout=20)
         data = r.json()
         if "id" in data:
             print(f"  ✅ 发布成功: {data['link']}")
@@ -186,26 +282,41 @@ def publish_post(topic, content, tags):
             print(f"  ❌ 发布失败: {data}")
             return None
     except Exception as e:
-        print(f"  ❌ 发布异常: {e}")
+        print(f"  ❌ 异常: {e}")
         return None
 
 
+# ── 主流程 ────────────────────────────────────────────────────────────────────
 def main():
-    print(f"🚀 zfuye.org 自动发布 — {TODAY}")
+    print(f"🚀 zfuye.org 自动发布 — {TODAY} UTC+{HOUR_U}h")
     log = load_log()
-    topic = pick_topic(log)
-    print(f"  选题: {topic['title']} [{topic['cat']}]")
 
-    content, tags = write_article(topic)
-    link = publish_post(topic, content, tags)
+    article = pick_article(log)
+    if not article:
+        print("  ⚠️ 没有新文章可用，跳过")
+        return
+
+    print(f"  来源: {article['source']} [{article['cat']}]")
+    print(f"  原标题: {article['title'][:60]}")
+
+    title_cn = gen_cn_title(article)
+    print(f"  中文标题: {title_cn}")
+
+    content  = write_from_source(article)
+    link     = publish_post(title_cn, content, article)
 
     if link:
-        log.setdefault("published", []).append(topic["title"])
-        log[TODAY] = log.get(TODAY, [])
-        log[TODAY].append({"title": topic["title"], "url": link, "cat": topic["cat"]})
+        log.setdefault("used_urls", []).append(article["url"])
+        log.setdefault("published", []).append({
+            "date": TODAY, "title": title_cn,
+            "source": article["source"], "url": link
+        })
+        # 只保留最近500条used_urls
+        if len(log["used_urls"]) > 500:
+            log["used_urls"] = log["used_urls"][-500:]
         save_log(log)
 
-    print(f"✅ 完成")
+    print("✅ 完成")
 
 
 if __name__ == "__main__":
