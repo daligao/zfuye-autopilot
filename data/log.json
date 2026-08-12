@@ -1,6 +1,7 @@
 {
   "used_urls": [
-    "https://blogs.embarcadero.com/delphi-13-community-edition-is-now-available/"
+    "https://blogs.embarcadero.com/delphi-13-community-edition-is-now-available/",
+    "https://gowers.wordpress.com/2026/08/12/what-sort-of-maths-are-llms-good-at/"
   ],
   "published": [
     {
@@ -8,6 +9,12 @@
       "title": "Delphi 13社区版免费上线，你下载了吗？",
       "source": "Hacker News",
       "url": "https://www.zfuye.org/3905.html"
+    },
+    {
+      "date": "2026-08-12",
+      "title": "大模型到底擅长啥样的数学？",
+      "source": "Hacker News",
+      "url": "https://www.zfuye.org/3906.html"
     }
   ]
 }
