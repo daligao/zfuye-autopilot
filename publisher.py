@@ -28,13 +28,13 @@ SOURCES = [
     {"name": "ProductHunt",       "cat": "AI副业",  "type": "rss",
      "url": "https://www.producthunt.com/feed"},
     {"name": "IndieHackers",      "cat": "AI副业",  "type": "rss",
-     "url": "https://www.indiehackers.com/feed.xml"},
+     "url": "https://www.indiehackers.com/feed"},
 
     # 海外接单
     {"name": "Entrepreneur",      "cat": "海外接单", "type": "rss",
      "url": "https://www.entrepreneur.com/latest.rss"},
     {"name": "Freelancer Blog",   "cat": "海外接单", "type": "rss",
-     "url": "https://www.freelancer.com/community/feed"},
+     "url": "https://www.freelancer.com/articles/rss"},
 
     # 信息差·副业
     {"name": "Medium·副业",       "cat": "信息差",   "type": "rss",
@@ -177,11 +177,20 @@ def pick_article(log):
                 return article
 
 
-    # 全分类都试过还没找到，放开used限制
+    # 全分类都试过还没找到，放开used限制但保留关键词过滤（仅对HN）
+    FALLBACK_KEYWORDS = ["ai","gpt","llm","saas","revenue","startup","earn","money",
+                         "income","side","freelance","business","tool","product","maker"]
     for source in random.sample(SOURCES, len(SOURCES)):
         articles = fetch_source(source)
-        if articles:
-            article = articles[0]
+        if not articles:
+            continue
+        # HN 必须匹配关键词
+        if source["type"] == "hn":
+            articles = [a for a in articles if any(k in a.get("title","").lower() for k in FALLBACK_KEYWORDS)]
+        fresh = [a for a in articles if a["url"] not in used_urls]
+        candidates = fresh if fresh else articles[:1]
+        if candidates:
+            article = candidates[0]
             article["cat"] = source["cat"]
             return article
 
