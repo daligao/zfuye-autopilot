@@ -8,7 +8,8 @@
     "https://lovable.dev/blog/series-c",
     "https://discoveredmaterials.com/research/",
     "https://petapixel.com/2026/08/04/amazing-high-res-photo-shows-a-butte-rising-from-mars/",
-    "https://openai.com/codex/"
+    "https://openai.com/codex/",
+    "https://www.entrepreneur.com/growing-a-business/4-hidden-leadership-bottlenecks-stalling-your-growth/504751"
   ],
   "published": [
     {
@@ -64,6 +65,12 @@
       "title": "Linux 也能用上 ChatGPT 桌面版了？",
       "source": "Hacker News",
       "url": "https://www.zfuye.org/3966.html"
+    },
+    {
+      "date": "2026-08-13",
+      "title": "4个隐藏领导力瓶颈拖垮你？赶紧清除！",
+      "source": "Entrepreneur",
+      "url": "https://www.zfuye.org/3969.html"
     }
   ]
 }
