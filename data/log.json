@@ -6,7 +6,8 @@
     "https://blog.florianherrengt.com/ai-removing-middle-class-software-engineering.html",
     "https://tailscale.com/blog/sqlite-wal-reset-bug",
     "https://lovable.dev/blog/series-c",
-    "https://discoveredmaterials.com/research/"
+    "https://discoveredmaterials.com/research/",
+    "https://petapixel.com/2026/08/04/amazing-high-res-photo-shows-a-butte-rising-from-mars/"
   ],
   "published": [
     {
@@ -50,6 +51,12 @@
       "title": "AI智能体发现新材料？YC新项目揭秘",
       "source": "Hacker News",
       "url": "https://www.zfuye.org/3961.html"
+    },
+    {
+      "date": "2026-08-13",
+      "title": "火星平原惊现沙盖孤峰，高清照片揭秘！",
+      "source": "Hacker News",
+      "url": "https://www.zfuye.org/3963.html"
     }
   ]
 }
