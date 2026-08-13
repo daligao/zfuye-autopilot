@@ -9,7 +9,8 @@
     "https://discoveredmaterials.com/research/",
     "https://petapixel.com/2026/08/04/amazing-high-res-photo-shows-a-butte-rising-from-mars/",
     "https://openai.com/codex/",
-    "https://www.entrepreneur.com/growing-a-business/4-hidden-leadership-bottlenecks-stalling-your-growth/504751"
+    "https://www.entrepreneur.com/growing-a-business/4-hidden-leadership-bottlenecks-stalling-your-growth/504751",
+    "https://www.netlify.com/blog/one-prompt-11-models-very-different-results/"
   ],
   "published": [
     {
@@ -71,6 +72,12 @@
       "title": "4个隐藏领导力瓶颈拖垮你？赶紧清除！",
       "source": "Entrepreneur",
       "url": "https://www.zfuye.org/3969.html"
+    },
+    {
+      "date": "2026-08-13",
+      "title": "同一个提示，11个AI模型，结果差这么多？",
+      "source": "Hacker News",
+      "url": "https://zfuye.org/3989.html"
     }
   ]
 }
