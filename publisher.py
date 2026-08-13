@@ -419,14 +419,11 @@ def main():
         print("  ⚠️ 内容生成失败，跳过发布")
         return
 
-    # 第一步：先发布（二维码URL占位）
-    placeholder = wrap_with_lock(content, "")
-    post_id, link = publish_post(title_cn, placeholder, article)
-
-    if post_id and link:
-        # 第二步：用真实 URL 更新静态二维码
-        final_content = wrap_with_lock(content, link)
-        update_post_content(post_id, final_content)
+    # 直接发布全文（扫码锁已关闭，等流量上来再开）
+    # 如需重新开启扫码锁：取消注释下方两行，注释掉 publish_post(title_cn, content, ...) 这行
+    # placeholder = wrap_with_lock(content, "")
+    # final_content = wrap_with_lock(content, link)
+    post_id, link = publish_post(title_cn, content, article)
 
     if link:
         log.setdefault("used_urls", []).append(article["url"])
