@@ -4,7 +4,8 @@
     "https://gowers.wordpress.com/2026/08/12/what-sort-of-maths-are-llms-good-at/",
     "https://knownagents.com/insights",
     "https://blog.florianherrengt.com/ai-removing-middle-class-software-engineering.html",
-    "https://tailscale.com/blog/sqlite-wal-reset-bug"
+    "https://tailscale.com/blog/sqlite-wal-reset-bug",
+    "https://lovable.dev/blog/series-c"
   ],
   "published": [
     {
@@ -36,6 +37,12 @@
       "title": "十六年前的SQLite重置bug，竟让Tailscale数据库损坏",
       "source": "Hacker News",
       "url": "https://www.zfuye.org/3919.html"
+    },
+    {
+      "date": "2026-08-13",
+      "title": "这家公司狂揽4亿美元，凭啥？",
+      "source": "Hacker News",
+      "url": "https://www.zfuye.org/3959.html"
     }
   ]
 }
