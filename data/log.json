@@ -7,7 +7,8 @@
     "https://tailscale.com/blog/sqlite-wal-reset-bug",
     "https://lovable.dev/blog/series-c",
     "https://discoveredmaterials.com/research/",
-    "https://petapixel.com/2026/08/04/amazing-high-res-photo-shows-a-butte-rising-from-mars/"
+    "https://petapixel.com/2026/08/04/amazing-high-res-photo-shows-a-butte-rising-from-mars/",
+    "https://openai.com/codex/"
   ],
   "published": [
     {
@@ -57,6 +58,12 @@
       "title": "火星平原惊现沙盖孤峰，高清照片揭秘！",
       "source": "Hacker News",
       "url": "https://www.zfuye.org/3963.html"
+    },
+    {
+      "date": "2026-08-13",
+      "title": "Linux 也能用上 ChatGPT 桌面版了？",
+      "source": "Hacker News",
+      "url": "https://www.zfuye.org/3966.html"
     }
   ]
 }
