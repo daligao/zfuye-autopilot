@@ -5,7 +5,8 @@
     "https://knownagents.com/insights",
     "https://blog.florianherrengt.com/ai-removing-middle-class-software-engineering.html",
     "https://tailscale.com/blog/sqlite-wal-reset-bug",
-    "https://lovable.dev/blog/series-c"
+    "https://lovable.dev/blog/series-c",
+    "https://discoveredmaterials.com/research/"
   ],
   "published": [
     {
@@ -43,6 +44,12 @@
       "title": "这家公司狂揽4亿美元，凭啥？",
       "source": "Hacker News",
       "url": "https://www.zfuye.org/3959.html"
+    },
+    {
+      "date": "2026-08-13",
+      "title": "AI智能体发现新材料？YC新项目揭秘",
+      "source": "Hacker News",
+      "url": "https://www.zfuye.org/3961.html"
     }
   ]
 }
