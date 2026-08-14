@@ -15,7 +15,8 @@
     "https://current.org/2026/08/nine-pbs-sues-iron-mountain-over-blocked-access-to-archival-data/",
     "https://sspai.com/post/111709",
     "https://bloggingwizard.com/repurpose-blog-content-social-media-snippets/",
-    "https://sspai.com/post/113434"
+    "https://sspai.com/post/113434",
+    "https://noahkagan.com/april-musings-2025/"
   ],
   "published": [
     {
@@ -113,6 +114,12 @@
       "title": "开源AI框架，3步搭个人智能体</ref>",
       "source": "少数派",
       "url": "https://zfuye.org/4012.html"
+    },
+    {
+      "date": "2026-08-14",
+      "title": "4月复盘：我想通的3件事",
+      "source": "Noah Kagan",
+      "url": "https://zfuye.org/4018.html"
     }
   ]
 }
