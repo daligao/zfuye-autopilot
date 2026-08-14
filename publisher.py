@@ -191,9 +191,15 @@ def write_from_source(article):
 - 如果内容涉及政治、军事、地缘冲突、政府批评、敏感社会议题，请直接回复"SKIP"，不要翻译
 - 只翻译科技、商业、副业、赚钱、工具、创业类内容
 
-如果内容合适，请做两件事：
+如果内容合适，请做三件事：
 1. 把原文内容忠实翻译成中文（保留原文的结构和细节，不要删减主要内容）
-2. 在文末加一小段编者点评，写2-3句你对这篇文章的看法或补充
+2. 在翻译正文后加一小段编者点评（2-3句你的看法）
+3. 最后加3个FAQ问答，用中国读者会搜索的问题，格式如下：
+
+<h2>常见问题</h2>
+<h3>Q：[问题]</h3>
+<p>A：[回答，2-3句]</p>
+（重复3次）
 
 格式要求：
 - HTML格式，用<h2><p><ul><li>
@@ -309,7 +315,15 @@ def gen_cn_title(article):
             json={
                 "model": "deepseek-v4-flash",
                 "messages": [{"role": "user", "content":
-                    f"把这个英文标题直接翻译成中文，保持原意，10-20字，只输出标题不加引号：\n{article['title']}"}],
+                    f"""把这个英文标题改写成中文搜索词风格的标题：
+- 用中国人会在搜索框输入的词，不要直译
+- 带具体数字（金额/时间/步骤数）优先
+- 10-18字，口语化
+- 人名/品牌名换成"一个美国人""一位创业者"等
+- 例子风格："月入5万的副业怎么做""美国人靠租厕所年赚300万""3步建一个自动赚钱网站"
+只输出标题，不加引号
+
+英文标题：{article['title']}"""}],
                 "temperature": 0.6
             },
             timeout=60,
@@ -331,6 +345,54 @@ CAT_CN = {
     "AI副业": "AI副业", "海外接单": "海外接单", "信息差": "信息差",
     "被动收入": "被动收入", "跨境电商": "跨境电商",
 }
+
+def get_related_posts(cat_name, exclude_id):
+    """抓同分类最近3篇文章，返回推荐HTML"""
+    try:
+        cred   = b64encode(f"{WP_USER}:{WP_APP_PASS}".encode()).decode()
+        auth_h = {"Authorization": f"Basic {cred}"}
+        # 先拿分类ID
+        r = requests.get(f"{WP_BASE}/categories?search={cat_name}&per_page=5",
+                         headers=auth_h, timeout=8)
+        cats = [c for c in r.json() if c["name"] == cat_name]
+        if not cats:
+            return ""
+        cat_id = cats[0]["id"]
+        r2 = requests.get(
+            f"{WP_BASE}/posts?categories={cat_id}&exclude={exclude_id}&per_page=3&orderby=date&order=desc",
+            headers=auth_h, timeout=8
+        )
+        posts = r2.json()
+        if not posts:
+            return ""
+        items = "".join(
+            f'<li><a href="{p["link"]}">{p["title"]["rendered"]}</a></li>'
+            for p in posts
+        )
+        return f"""
+<hr style="margin:32px 0 16px;border:none;border-top:1px solid #eee">
+<div style="background:#f5f5f5;border-radius:8px;padding:16px 20px;font-size:14px">
+  <p style="margin:0 0 10px;font-weight:bold;color:#333">📖 相关阅读</p>
+  <ul style="margin:0;padding-left:18px;line-height:2;color:#555">{items}</ul>
+</div>"""
+    except Exception as e:
+        print(f"  [相关文章] 失败: {e}")
+        return ""
+
+
+def build_faq_schema(content, title):
+    """从文章内容提取FAQ，生成JSON-LD schema"""
+    import json as _json
+    # 从内容里提取 Q/A 对
+    qs = re.findall(r'<h3>Q[：:]\s*(.+?)</h3>\s*<p>A[：:]\s*(.+?)</p>', content, re.S)
+    if not qs:
+        return ""
+    entities = [{"@type": "Question", "name": q.strip(),
+                 "acceptedAnswer": {"@type": "Answer", "text": re.sub(r'<[^>]+>', '', a).strip()}}
+                for q, a in qs[:5]]
+    schema = {"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": entities}
+    return f'\n<script type="application/ld+json">{_json.dumps(schema, ensure_ascii=False)}</script>\n'
+
 
 def get_or_create_category(name, auth_h):
     try:
@@ -430,11 +492,14 @@ def main():
   <p style="margin:0;color:#c47f00;font-weight:bold">你也可以做一台自动赚钱的网站机器 🚀</p>
 </div>"""
 
-    # 直接发布全文（扫码锁已关闭，等流量上来再开）
-    # 如需重新开启扫码锁：取消注释下方两行，注释掉 publish_post(title_cn, content, ...) 这行
-    # placeholder = wrap_with_lock(content, "")
-    # final_content = wrap_with_lock(content, link)
     post_id, link = publish_post(title_cn, content, article)
+
+    if post_id and link:
+        # 发布成功后追加：相关文章 + FAQ JSON-LD
+        related_html = get_related_posts(article["cat"], post_id)
+        faq_schema   = build_faq_schema(content, title_cn)
+        if related_html or faq_schema:
+            update_post_content(post_id, content + faq_schema + related_html)
 
     if link:
         log.setdefault("used_urls", []).append(article["url"])
