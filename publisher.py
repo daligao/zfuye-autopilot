@@ -4,7 +4,7 @@ zfuye.org 自动发布机器人
 真实来源抓取 → DeepSeek提炼翻译 → WordPress发布
 """
 
-import os, json, random, datetime, requests, re, time
+import os, json, random, datetime, requests, re
 import xml.etree.ElementTree as ET
 from html import unescape
 from base64 import b64encode
@@ -23,37 +23,32 @@ LOG_PATH = "data/log.json"
 # ── 数据源配置 ────────────────────────────────────────────────────────────────
 SOURCES = [
     # AI副业
-    {"name": "Hacker News",       "cat": "AI副业",  "type": "hn",
-     "keywords": ["ai","gpt","claude","llm","openai","anthropic","revenue","saas","product","launch","maker","tool"]},
-    {"name": "ProductHunt",       "cat": "AI副业",  "type": "rss",
+    {"name": "ProductHunt",        "cat": "AI副业",  "type": "rss",
      "url": "https://www.producthunt.com/feed"},
-    {"name": "IndieHackers",      "cat": "AI副业",  "type": "rss",
+    {"name": "IndieHackers",       "cat": "AI副业",  "type": "rss",
      "url": "https://www.indiehackers.com/feed"},
 
     # 海外接单
-    {"name": "Entrepreneur",      "cat": "海外接单", "type": "rss",
+    {"name": "Entrepreneur",       "cat": "海外接单", "type": "rss",
      "url": "https://www.entrepreneur.com/latest.rss"},
-    {"name": "Freelancer Blog",   "cat": "海外接单", "type": "rss",
+    {"name": "Freelancer Blog",    "cat": "海外接单", "type": "rss",
      "url": "https://www.freelancer.com/articles/rss"},
 
     # 信息差·副业
-    {"name": "Medium·副业",       "cat": "信息差",   "type": "rss",
+    {"name": "Medium·副业",        "cat": "信息差",   "type": "rss",
      "url": "https://medium.com/feed/tag/side-hustle"},
-    {"name": "Medium·创业",       "cat": "信息差",   "type": "rss",
+    {"name": "Medium·创业",        "cat": "信息差",   "type": "rss",
      "url": "https://medium.com/feed/tag/entrepreneurship"},
-    {"name": "DEV.to",            "cat": "信息差",   "type": "devto"},
 
     # 被动收入
-    {"name": "Medium·被动收入",   "cat": "被动收入", "type": "rss",
+    {"name": "Medium·被动收入",    "cat": "被动收入", "type": "rss",
      "url": "https://medium.com/feed/tag/passive-income"},
     {"name": "Smart Passive Income","cat": "被动收入","type": "rss",
      "url": "https://www.smartpassiveincome.com/feed/"},
 
     # 跨境电商
-    {"name": "TechCrunch",        "cat": "跨境电商", "type": "rss",
-     "url": "https://techcrunch.com/feed/"},
-    {"name": "VentureBeat",       "cat": "跨境电商", "type": "rss",
-     "url": "https://venturebeat.com/feed/"},
+    {"name": "Entrepreneur·电商",  "cat": "跨境电商", "type": "rss",
+     "url": "https://www.entrepreneur.com/topic/ecommerce.rss"},
 ]
 
 # 所有分类，随机轮转保证均匀覆盖
@@ -83,61 +78,8 @@ def fetch_rss(source, limit=8):
         return []
 
 
-def fetch_hn(source, limit=6):
-    keywords = source.get("keywords", ["ai","saas","startup","revenue"])
-    try:
-        ids = requests.get(
-            "https://hacker-news.firebaseio.com/v0/topstories.json", timeout=10
-        ).json()[:80]
-        results = []
-        for i in ids:
-            try:
-                item = requests.get(
-                    f"https://hacker-news.firebaseio.com/v0/item/{i}.json", timeout=8
-                ).json()
-                title = item.get("title", "")
-                score = item.get("score", 0)
-                url   = item.get("url") or f"https://news.ycombinator.com/item?id={i}"
-                if score > 60 and any(k in title.lower() for k in keywords):
-                    results.append({"title": title, "url": url,
-                                    "summary": f"HN评分: {score}",
-                                    "source": "Hacker News"})
-                    if len(results) >= limit: break
-                time.sleep(0.05)
-            except: continue
-        return results
-    except Exception as e:
-        print(f"  [HN] 失败: {e}")
-        return []
-
-
-def fetch_devto(source, limit=6):
-    keywords = ["ai","side","saas","earn","income","startup","product","tool","freelance"]
-    try:
-        r = requests.get("https://dev.to/api/articles?top=1&per_page=30", timeout=12)
-        results = []
-        for a in r.json():
-            title = a.get("title","")
-            if any(k in title.lower() for k in keywords):
-                results.append({
-                    "title":   title,
-                    "url":     a.get("url",""),
-                    "summary": (a.get("description") or "")[:400],
-                    "source":  "DEV.to",
-                })
-                if len(results) >= limit: break
-        return results
-    except Exception as e:
-        print(f"  [DEV.to] 失败: {e}")
-        return []
-
-
 def fetch_source(source):
-    t = source["type"]
-    if t == "rss":    return fetch_rss(source)
-    if t == "hn":     return fetch_hn(source)
-    if t == "devto":  return fetch_devto(source)
-    return []
+    return fetch_rss(source)
 
 
 # ── 选文章 ────────────────────────────────────────────────────────────────────
@@ -177,16 +119,11 @@ def pick_article(log):
                 return article
 
 
-    # 全分类都试过还没找到，放开used限制但保留关键词过滤（仅对HN）
-    FALLBACK_KEYWORDS = ["ai","gpt","llm","saas","revenue","startup","earn","money",
-                         "income","side","freelance","business","tool","product","maker"]
+    # 全分类都试过还没找到，放开 used 限制
     for source in random.sample(SOURCES, len(SOURCES)):
         articles = fetch_source(source)
         if not articles:
             continue
-        # HN 必须匹配关键词
-        if source["type"] == "hn":
-            articles = [a for a in articles if any(k in a.get("title","").lower() for k in FALLBACK_KEYWORDS)]
         fresh = [a for a in articles if a["url"] not in used_urls]
         candidates = fresh if fresh else articles[:1]
         if candidates:
