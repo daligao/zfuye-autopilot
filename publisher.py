@@ -159,10 +159,13 @@ def write_from_source(article):
     if not DEEPSEEK_KEY:
         return f"<p>测试：{article['title']}</p>"
 
-    # 先抓原文正文，比 RSS 摘要丰富得多
+    # 先抓原文正文
     full_text = fetch_full_text(article["url"])
-    body = full_text if len(full_text) > 200 else article.get("summary", "（无摘要）")
+    body = full_text if len(full_text) > 200 else article.get("summary", "")
     print(f"  [正文] {len(body)} 字符")
+    if len(body) < 500:
+        print(f"  ⚠️ 正文太短（可能有付费墙），跳过")
+        return None
 
     prompt = f"""以下是一篇英文资讯：
 标题：{article['title']}
@@ -197,6 +200,10 @@ def write_from_source(article):
         content = r.json()["choices"][0]["message"]["content"].strip()
         if content.strip().upper().startswith("SKIP"):
             print(f"  [DeepSeek] 内容不合规，跳过")
+            return None
+        FAIL_PHRASES = ["未能取得", "无法逐句", "正文内容缺失", "未能获取", "无法翻译", "抓取失败"]
+        if any(p in content for p in FAIL_PHRASES):
+            print(f"  [DeepSeek] 承认无正文，跳过")
             return None
         print(f"  [DeepSeek] 完成 {len(content)} 字")
         return content
