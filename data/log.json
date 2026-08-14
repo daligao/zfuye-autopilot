@@ -11,7 +11,8 @@
     "https://openai.com/codex/",
     "https://www.entrepreneur.com/growing-a-business/4-hidden-leadership-bottlenecks-stalling-your-growth/504751",
     "https://www.netlify.com/blog/one-prompt-11-models-very-different-results/",
-    "https://www.cerebras.ai/blog/accelerating-gpt-5-6-sol-ultrafast-with-openai"
+    "https://www.cerebras.ai/blog/accelerating-gpt-5-6-sol-ultrafast-with-openai",
+    "https://current.org/2026/08/nine-pbs-sues-iron-mountain-over-blocked-access-to-archival-data/"
   ],
   "published": [
     {
@@ -85,6 +86,12 @@
       "title": "GPT-5.6 Sol提速有多猛？",
       "source": "Hacker News",
       "url": "https://zfuye.org/3990.html"
+    },
+    {
+      "date": "2026-08-14",
+      "title": "档案数据被锁？Nine PBS怒告Iron Mountain",
+      "source": "Hacker News",
+      "url": "https://zfuye.org/3991.html"
     }
   ]
 }
