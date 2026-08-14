@@ -26,14 +26,14 @@ SOURCES = [
     # AI副业
     {"name": "ProductHunt",        "cat": "AI副业",  "type": "rss",
      "url": "https://www.producthunt.com/feed"},
-    {"name": "IndieHackers",       "cat": "AI副业",  "type": "rss",
-     "url": "https://www.indiehackers.com/feed"},
+    {"name": "Niche Pursuits",      "cat": "AI副业",  "type": "rss",
+     "url": "https://www.nichepursuits.com/feed/"},
 
     # 海外接单
     {"name": "Entrepreneur",       "cat": "海外接单", "type": "rss",
      "url": "https://www.entrepreneur.com/latest.rss"},
-    {"name": "Freelancer Blog",    "cat": "海外接单", "type": "rss",
-     "url": "https://www.freelancer.com/articles/rss"},
+    {"name": "Side Hustle Nation", "cat": "海外接单", "type": "rss",
+     "url": "https://www.sidehustlenation.com/feed/"},
 
     # 信息差·副业
     {"name": "Medium·副业",        "cat": "信息差",   "type": "rss",
