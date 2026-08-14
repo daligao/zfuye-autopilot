@@ -23,47 +23,73 @@ LOG_PATH = "data/log.json"
 
 # ── 数据源配置 ────────────────────────────────────────────────────────────────
 SOURCES = [
-    # AI副业
-    {"name": "ProductHunt",           "cat": "AI副业",  "type": "rss",
+    # AI副业（英文）
+    {"name": "ProductHunt",           "cat": "AI副业",  "type": "rss", "lang": "en",
      "url": "https://www.producthunt.com/feed"},
-    {"name": "Niche Pursuits",        "cat": "AI副业",  "type": "rss",
+    {"name": "Niche Pursuits",        "cat": "AI副业",  "type": "rss", "lang": "en",
      "url": "https://www.nichepursuits.com/feed/"},
-    {"name": "Blogging Wizard",       "cat": "AI副业",  "type": "rss",
+    {"name": "Blogging Wizard",       "cat": "AI副业",  "type": "rss", "lang": "en",
      "url": "https://bloggingwizard.com/feed/"},
+    {"name": "Starter Story",         "cat": "AI副业",  "type": "rss", "lang": "en",
+     "url": "https://www.starterstory.com/rss"},
+    {"name": "Noah Kagan",            "cat": "AI副业",  "type": "rss", "lang": "en",
+     "url": "https://noahkagan.com/feed/"},
 
-    # 海外接单
-    {"name": "Entrepreneur",          "cat": "海外接单", "type": "rss",
+    # 海外接单（英文）
+    {"name": "Entrepreneur",          "cat": "海外接单", "type": "rss", "lang": "en",
      "url": "https://www.entrepreneur.com/latest.rss"},
-    {"name": "Side Hustle Nation",    "cat": "海外接单", "type": "rss",
+    {"name": "Side Hustle Nation",    "cat": "海外接单", "type": "rss", "lang": "en",
      "url": "https://www.sidehustlenation.com/feed/"},
-    {"name": "Millo",                 "cat": "海外接单", "type": "rss",
+    {"name": "Millo",                 "cat": "海外接单", "type": "rss", "lang": "en",
      "url": "https://millo.co/feed"},
-    {"name": "My Wife Quit Her Job",  "cat": "海外接单", "type": "rss",
+    {"name": "My Wife Quit Her Job",  "cat": "海外接单", "type": "rss", "lang": "en",
      "url": "https://mywifequitherjob.com/feed/"},
+    {"name": "Freelancers Union",     "cat": "海外接单", "type": "rss", "lang": "en",
+     "url": "https://blog.freelancersunion.org/feed/"},
 
-    # 信息差·副业
-    {"name": "Medium·副业",           "cat": "信息差",   "type": "rss",
+    # 信息差·副业（英文）
+    {"name": "Medium·副业",           "cat": "信息差",   "type": "rss", "lang": "en",
      "url": "https://medium.com/feed/tag/side-hustle"},
-    {"name": "Medium·创业",           "cat": "信息差",   "type": "rss",
+    {"name": "Medium·创业",           "cat": "信息差",   "type": "rss", "lang": "en",
      "url": "https://medium.com/feed/tag/entrepreneurship"},
-    {"name": "Making Sense of Cents", "cat": "信息差",   "type": "rss",
+    {"name": "Making Sense of Cents", "cat": "信息差",   "type": "rss", "lang": "en",
      "url": "https://www.makingsenseofcents.com/feed"},
-    {"name": "Dollar Sprout",         "cat": "信息差",   "type": "rss",
+    {"name": "Dollar Sprout",         "cat": "信息差",   "type": "rss", "lang": "en",
      "url": "https://dollarsprout.com/feed/"},
+    {"name": "The Hustle",            "cat": "信息差",   "type": "rss", "lang": "en",
+     "url": "https://thehustle.co/feed/"},
 
-    # 被动收入
-    {"name": "Medium·被动收入",       "cat": "被动收入", "type": "rss",
+    # 被动收入（英文）
+    {"name": "Medium·被动收入",       "cat": "被动收入", "type": "rss", "lang": "en",
      "url": "https://medium.com/feed/tag/passive-income"},
-    {"name": "Smart Passive Income",  "cat": "被动收入", "type": "rss",
+    {"name": "Smart Passive Income",  "cat": "被动收入", "type": "rss", "lang": "en",
      "url": "https://www.smartpassiveincome.com/feed/"},
-    {"name": "Financial Samurai",     "cat": "被动收入", "type": "rss",
+    {"name": "Financial Samurai",     "cat": "被动收入", "type": "rss", "lang": "en",
      "url": "https://www.financialsamurai.com/feed/"},
-    {"name": "Well Kept Wallet",      "cat": "被动收入", "type": "rss",
+    {"name": "Well Kept Wallet",      "cat": "被动收入", "type": "rss", "lang": "en",
      "url": "https://wellkeptwallet.com/feed/"},
+    {"name": "Passive Income MD",     "cat": "被动收入", "type": "rss", "lang": "en",
+     "url": "https://passiveincomemd.com/feed/"},
 
-    # 跨境电商
-    {"name": "Entrepreneur·电商",     "cat": "跨境电商", "type": "rss",
+    # 跨境电商（英文）
+    {"name": "Entrepreneur·电商",     "cat": "跨境电商", "type": "rss", "lang": "en",
      "url": "https://www.entrepreneur.com/topic/ecommerce.rss"},
+    {"name": "A2X Blog",              "cat": "跨境电商", "type": "rss", "lang": "en",
+     "url": "https://www.a2xaccounting.com/blog/rss.xml"},
+    {"name": "Jungle Scout",          "cat": "跨境电商", "type": "rss", "lang": "en",
+     "url": "https://www.junglescout.com/blog/feed/"},
+
+    # ── 中文源（直接发布，省去翻译）────────────────────────────────────────────
+    {"name": "36氪",                  "cat": "AI副业",  "type": "rss", "lang": "zh",
+     "url": "https://36kr.com/feed"},
+    {"name": "虎嗅",                  "cat": "信息差",   "type": "rss", "lang": "zh",
+     "url": "https://www.huxiu.com/rss/0.xml"},
+    {"name": "少数派",                "cat": "AI副业",  "type": "rss", "lang": "zh",
+     "url": "https://sspai.com/feed"},
+    {"name": "爱范儿",                "cat": "信息差",   "type": "rss", "lang": "zh",
+     "url": "https://www.ifanr.com/feed"},
+    {"name": "钛媒体",                "cat": "跨境电商", "type": "rss", "lang": "zh",
+     "url": "https://www.tmtpost.com/rss"},
 ]
 
 # 所有分类，随机轮转保证均匀覆盖
@@ -181,6 +207,57 @@ def write_from_source(article):
         print(f"  ⚠️ 正文太短（可能有付费墙），跳过")
         return None
 
+    # ── 中文源：直接用正文 + 只加编者按（省翻译token）──────────────────────────
+    if article.get("lang") == "zh":
+        prompt = f"""以下是一篇中文资讯：
+标题：{article['title']}
+来源：{article['source']}
+正文内容：{body}
+原文链接：{article['url']}
+
+【重要】请先判断这篇文章是否适合发布：
+- 如果内容涉及政治、军事、地缘冲突、政府批评、敏感社会议题，请直接回复"SKIP"
+- 只发布科技、商业、副业、赚钱、工具、创业类内容
+
+如果内容合适，请做两件事：
+1. 把正文内容整理成规范的HTML格式（用<h2><p><ul><li>，保留原有结构）
+2. 最后加3个FAQ问答，用读者会搜索的问题，格式：
+<h2>常见问题</h2>
+<h3>Q：[问题]</h3>
+<p>A：[回答，2-3句]</p>
+（重复3次）
+
+格式要求：
+- 不要写文章大标题
+- 不要```html 代码块标记
+- 结尾加编者按：<blockquote style="border-left:3px solid #f0a500;padding:12px 16px;margin:24px 0;background:#fffbf0;color:#555">[2-3句AI编辑点评]</blockquote>
+- 最后一行：<p style="color:#999;font-size:13px">资讯来源：{article['source']}</p>"""
+
+        try:
+            r = requests.post(
+                "https://api.deepseek.com/chat/completions",
+                headers={"Authorization": f"Bearer {DEEPSEEK_KEY}",
+                         "Content-Type": "application/json"},
+                json={"model": "deepseek-v4-flash",
+                      "messages": [{"role": "user", "content": prompt}],
+                      "temperature": 0.7},
+                timeout=90,
+            )
+            content = r.json()["choices"][0]["message"]["content"].strip()
+            if content.strip().upper().startswith("SKIP"):
+                print(f"  [DeepSeek] 内容不合规，跳过")
+                return None
+            FAIL_PHRASES = ["未能取得", "无法逐句", "正文内容缺失", "未能获取", "无法翻译", "抓取失败"]
+            if any(p in content for p in FAIL_PHRASES):
+                print(f"  [DeepSeek] 承认无正文，跳过")
+                return None
+            print(f"  [DeepSeek·中文] 完成 {len(content)} 字")
+            return content
+        except Exception as e:
+            print(f"  [DeepSeek] 失败: {e}")
+            return None
+
+    # ── 英文源：翻译 + 编者按 + FAQ ──────────────────────────────────────────────
     prompt = f"""以下是一篇英文资讯：
 标题：{article['title']}
 来源：{article['source']}
@@ -306,6 +383,9 @@ function suReveal(){{
 
 def gen_cn_title(article):
     if not DEEPSEEK_KEY:
+        return article["title"]
+    # 中文源标题已是中文，直接返回
+    if article.get("lang") == "zh":
         return article["title"]
     try:
         r = requests.post(
