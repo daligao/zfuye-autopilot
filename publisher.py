@@ -266,10 +266,9 @@ def gen_cn_title(article):
                     f"把这个英文标题直接翻译成中文，保持原意，10-20字，只输出标题不加引号：\n{article['title']}"}],
                 "temperature": 0.6
             },
-            timeout=30,
+            timeout=60,
         )
         title = r.json()["choices"][0]["message"]["content"].strip()
-        # 兜底：如果返回英文（非中文字符占多数），重用原始prompt再试一次
         cn_chars = sum(1 for c in title if '一' <= c <= '鿿')
         if cn_chars < 3:
             print(f"  [标题翻译] 返回英文，重试…")
@@ -277,9 +276,8 @@ def gen_cn_title(article):
         print(f"  [标题翻译] {title}")
         return title
     except Exception as e:
-        print(f"  [标题翻译] 失败: {e}，使用兜底标题")
-        # 兜底：直接给个通用副业标题，不暴露英文
-        return f"海外最新副业资讯：{article['source']}精选"
+        print(f"  [标题翻译] 失败: {e}，使用原英文标题")
+        return article["title"]
 
 
 # ── WordPress发布 ─────────────────────────────────────────────────────────────
@@ -372,17 +370,18 @@ def main():
         return
 
     content += """
-<hr style="margin:40px 0 20px;border:none;border-top:1px solid #eee">
-<div style="background:#f9f9f9;border-radius:8px;padding:20px 24px;font-size:14px;line-height:2">
-  <p style="margin:0 0 10px;font-weight:bold">📌 关于本站</p>
-  <p style="margin:0 0 16px;color:#555">内容自动翻译自海外科技媒体，仅供个人学习参考。</p>
-  <p style="margin:0 0 8px;font-weight:bold">🛠️ 站长的同款工具</p>
+<hr style="margin:40px 0 24px;border:none;border-top:1px solid #eee">
+<div style="border:2px solid #f0a500;border-radius:10px;background:#fffbf0;padding:20px 24px;font-size:14px;line-height:1.9">
+  <p style="margin:0 0 4px;font-size:13px;color:#c47f00;font-weight:bold;letter-spacing:1px">🏷️ 限时推荐</p>
+  <p style="margin:0 0 12px;font-weight:bold;font-size:16px;color:#333">📌 关于本站</p>
+  <p style="margin:0 0 14px;color:#555">内容自动翻译自海外科技媒体，仅供个人学习参考。</p>
+  <p style="margin:0 0 8px;font-weight:bold;color:#333">🛠️ 站长的同款工具</p>
   <ul style="margin:0 0 16px;padding-left:20px;color:#555">
-    <li>主机：<a href="https://zfuye.org/3528.html" target="_blank" rel="nofollow">Hostinger</a>（$2.99/月起）</li>
-    <li>域名：<a href="https://www.namecheap.com" target="_blank" rel="nofollow">Namecheap</a></li>
+    <li>主机：<a href="https://zfuye.org/3528.html" target="_blank" rel="nofollow" style="color:#c47f00;font-weight:bold">Hostinger</a>（$2.99/月起）</li>
+    <li>域名：<a href="https://www.namecheap.com" target="_blank" rel="nofollow" style="color:#c47f00;font-weight:bold">Namecheap</a></li>
     <li>AI工具：GitHub Copilot</li>
   </ul>
-  <p style="margin:0;color:#888;font-style:italic">你也可以做一台自动赚钱的网站机器 🚀</p>
+  <p style="margin:0;color:#c47f00;font-weight:bold">你也可以做一台自动赚钱的网站机器 🚀</p>
 </div>"""
 
     # 直接发布全文（扫码锁已关闭，等流量上来再开）
