@@ -10,10 +10,15 @@ from html import unescape
 from base64 import b64encode
 from urllib.parse import urlparse
 
-DEEPSEEK_KEY = os.environ.get("DEEPSEEK_KEY", "")
-WP_USER      = os.environ.get("WP_USER", "")
-WP_APP_PASS  = os.environ.get("WP_APP_PASS", "")
-WP_BASE      = "https://www.zfuye.org/wp-json/wp/v2"
+DEEPSEEK_KEY   = os.environ.get("DEEPSEEK_KEY", "")
+WP_USER        = os.environ.get("WP_USER", "")
+WP_APP_PASS    = os.environ.get("WP_APP_PASS", "")
+WEBSHARE_USER  = os.environ.get("WEBSHARE_USER", "")
+WEBSHARE_PASS  = os.environ.get("WEBSHARE_PASS", "")
+WP_BASE        = "https://www.zfuye.org/wp-json/wp/v2"
+
+# 需要走代理才能绕过软付费墙的域名
+PROXY_DOMAINS = {"medium.com", "entrepreneur.com"}
 
 TODAY  = datetime.date.today().isoformat()
 HOUR_U = datetime.datetime.utcnow().hour  # 0=早, 6=午, 12=晚
@@ -98,17 +103,22 @@ ALL_CATS = ["AI副业", "海外接单", "信息差", "被动收入", "跨境电�
 
 # ── 抓取函数 ──────────────────────────────────────────────────────────────────
 def fetch_full_text(url, max_chars=4000):
-    """抓取文章页面正文，提取纯文本，失败返回空字符串"""
+    """抓取文章页面正文，付费墙域名走Webshare代理"""
     try:
-        r = requests.get(url, headers=HEADERS, timeout=15)
+        domain = urlparse(url).hostname or ""
+        use_proxy = WEBSHARE_USER and any(d in domain for d in PROXY_DOMAINS)
+        proxies = {
+            "http":  f"http://{WEBSHARE_USER}:{WEBSHARE_PASS}@p.webshare.io:80/",
+            "https": f"http://{WEBSHARE_USER}:{WEBSHARE_PASS}@p.webshare.io:80/",
+        } if use_proxy else None
+        if use_proxy:
+            print(f"  [抓取正文] 走代理: {domain}")
+        r = requests.get(url, headers=HEADERS, timeout=15, proxies=proxies)
         r.encoding = r.apparent_encoding or "utf-8"
         html = r.text
-        # 去掉 script/style 标签及内容
         html = re.sub(r'<(script|style)[^>]*>.*?</\1>', '', html, flags=re.S|re.I)
-        # 保留 p/h1-h6/li 标签内的文字，其余标签剥壳
         text = re.sub(r'<[^>]+>', ' ', html)
         text = unescape(text)
-        # 压缩空白
         text = re.sub(r'\s{2,}', '\n', text).strip()
         return text[:max_chars]
     except Exception as e:
