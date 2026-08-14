@@ -215,12 +215,12 @@ def write_from_source(article):
         print(f"  ⚠️ 正文太短（可能有付费墙），跳过")
         return None
 
-    # ── 中文源：直接用正文 + 只加编者按（省翻译token）──────────────────────────
+    # ── 中文源：DeepSeek改写（避免与原站内容重复，防Google惩罚）──────────────
     if article.get("lang") == "zh":
-        prompt = f"""以下是一篇中文资讯：
+        prompt = f"""以下是一篇中文资讯的标题和正文：
 标题：{article['title']}
 来源：{article['source']}
-正文内容：{body}
+原文内容：{body}
 原文链接：{article['url']}
 
 【重要】请先判断这篇文章是否适合发布：
@@ -228,7 +228,9 @@ def write_from_source(article):
 - 只发布科技、商业、副业、赚钱、工具、创业类内容
 
 如果内容合适，请做两件事：
-1. 把正文内容整理成规范的HTML格式（用<h2><p><ul><li>，保留原有结构）
+1. 根据原文核心信息，用你自己的语言重新写一篇700-1000字的解读文章（不是格式化原文，是重新组织+补充实用建议，让内容与原文明显不同）
+   - 可以补充背景、加入实操步骤、或类比中国读者熟悉的场景
+   - 用<h2><p><ul><li>格式
 2. 最后加3个FAQ问答，用读者会搜索的问题，格式：
 <h2>常见问题</h2>
 <h3>Q：[问题]</h3>
@@ -238,7 +240,7 @@ def write_from_source(article):
 格式要求：
 - 不要写文章大标题
 - 不要```html 代码块标记
-- 结尾加编者按：<blockquote style="border-left:3px solid #f0a500;padding:12px 16px;margin:24px 0;background:#fffbf0;color:#555">[2-3句AI编辑点评]</blockquote>
+- 结尾加编者按：<blockquote style="border-left:3px solid #f0a500;padding:12px 16px;margin:24px 0;background:#fffbf0;color:#555">[2-3句AI编辑对这个话题的看法]</blockquote>
 - 最后一行：<p style="color:#999;font-size:13px">资讯来源：{article['source']}</p>"""
 
         try:
