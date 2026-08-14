@@ -208,9 +208,13 @@ def write_from_source(article):
 摘要/内容：{article.get('summary', '（无摘要）')}
 原文链接：{article['url']}
 
-请做两件事：
+【重要】请先判断这篇文章是否适合翻译发布：
+- 如果内容涉及政治、军事、地缘冲突、政府批评、敏感社会议题，请直接回复"SKIP"，不要翻译
+- 只翻译科技、商业、副业、赚钱、工具、创业类内容
+
+如果内容合适，请做两件事：
 1. 把原文内容忠实翻译成中文（保留原文的结构和细节，不要删减主要内容）
-2. 在文末加一段"编者按"，写2-3句你自己对这篇文章的看法或补充
+2. 在文末加一小段编者点评，写2-3句你对这篇文章的看法或补充
 
 格式要求：
 - HTML格式，用<h2><p><ul><li>
@@ -229,11 +233,14 @@ def write_from_source(article):
             timeout=90,
         )
         content = r.json()["choices"][0]["message"]["content"].strip()
+        if content.strip().upper().startswith("SKIP"):
+            print(f"  [DeepSeek] 内容不合规，跳过")
+            return None
         print(f"  [DeepSeek] 完成 {len(content)} 字")
         return content
     except Exception as e:
         print(f"  [DeepSeek] 失败: {e}")
-        return None  # 失败时不发布
+        return None
 
 
 def wrap_with_lock(content, post_url=""):
@@ -421,7 +428,10 @@ def main():
 
     content = write_from_source(article)
     if not content:
-        print("  ⚠️ 内容生成失败，跳过发布")
+        print("  ⚠️ 内容生成失败或内容不合规，跳过发布")
+        return
+    if len(content) < 300:
+        print(f"  ⚠️ 内容过短（{len(content)}字），跳过发布")
         return
 
     # 直接发布全文（扫码锁已关闭，等流量上来再开）
