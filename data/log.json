@@ -13,7 +13,8 @@
     "https://www.netlify.com/blog/one-prompt-11-models-very-different-results/",
     "https://www.cerebras.ai/blog/accelerating-gpt-5-6-sol-ultrafast-with-openai",
     "https://current.org/2026/08/nine-pbs-sues-iron-mountain-over-blocked-access-to-archival-data/",
-    "https://sspai.com/post/111709"
+    "https://sspai.com/post/111709",
+    "https://bloggingwizard.com/repurpose-blog-content-social-media-snippets/"
   ],
   "published": [
     {
@@ -99,6 +100,12 @@
       "title": "角落新声征文结果 5人获奖",
       "source": "少数派",
       "url": "https://zfuye.org/4004.html"
+    },
+    {
+      "date": "2026-08-14",
+      "title": "一篇博客发一周社交媒体，3步搞定",
+      "source": "Blogging Wizard",
+      "url": "https://zfuye.org/4006.html"
     }
   ]
 }
