@@ -8,6 +8,7 @@ import os, json, random, datetime, requests, re
 import xml.etree.ElementTree as ET
 from html import unescape
 from base64 import b64encode
+from urllib.parse import urlparse
 
 DEEPSEEK_KEY = os.environ.get("DEEPSEEK_KEY", "")
 WP_USER      = os.environ.get("WP_USER", "")
@@ -56,6 +57,25 @@ ALL_CATS = ["AI副业", "海外接单", "信息差", "被动收入", "跨境电�
 
 
 # ── 抓取函数 ──────────────────────────────────────────────────────────────────
+def fetch_full_text(url, max_chars=4000):
+    """抓取文章页面正文，提取纯文本，失败返回空字符串"""
+    try:
+        r = requests.get(url, headers=HEADERS, timeout=15)
+        r.encoding = r.apparent_encoding or "utf-8"
+        html = r.text
+        # 去掉 script/style 标签及内容
+        html = re.sub(r'<(script|style)[^>]*>.*?</\1>', '', html, flags=re.S|re.I)
+        # 保留 p/h1-h6/li 标签内的文字，其余标签剥壳
+        text = re.sub(r'<[^>]+>', ' ', html)
+        text = unescape(text)
+        # 压缩空白
+        text = re.sub(r'\s{2,}', '\n', text).strip()
+        return text[:max_chars]
+    except Exception as e:
+        print(f"  [抓取正文] 失败: {e}")
+        return ""
+
+
 def fetch_rss(source, limit=8):
     try:
         r = requests.get(source["url"], headers=HEADERS, timeout=12)
@@ -139,10 +159,15 @@ def write_from_source(article):
     if not DEEPSEEK_KEY:
         return f"<p>测试：{article['title']}</p>"
 
+    # 先抓原文正文，比 RSS 摘要丰富得多
+    full_text = fetch_full_text(article["url"])
+    body = full_text if len(full_text) > 200 else article.get("summary", "（无摘要）")
+    print(f"  [正文] {len(body)} 字符")
+
     prompt = f"""以下是一篇英文资讯：
 标题：{article['title']}
 来源：{article['source']}
-摘要/内容：{article.get('summary', '（无摘要）')}
+正文内容：{body}
 原文链接：{article['url']}
 
 【重要】请先判断这篇文章是否适合翻译发布：
