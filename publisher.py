@@ -89,8 +89,6 @@ SOURCES = [
      "url": "https://36kr.com/feed"},
     {"name": "虎嗅",                  "cat": "信息差",   "type": "rss", "lang": "zh",
      "url": "https://www.huxiu.com/rss/0.xml"},
-    {"name": "少数派",                "cat": "AI副业",  "type": "rss", "lang": "zh",
-     "url": "https://sspai.com/feed"},
     {"name": "爱范儿",                "cat": "信息差",   "type": "rss", "lang": "zh",
      "url": "https://www.ifanr.com/feed"},
     {"name": "钛媒体",                "cat": "跨境电商", "type": "rss", "lang": "zh",
