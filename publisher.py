@@ -371,6 +371,20 @@ def main():
         print(f"  ⚠️ 内容过短（{len(content)}字），跳过发布")
         return
 
+    content += """
+<hr style="margin:40px 0 20px;border:none;border-top:1px solid #eee">
+<div style="background:#f9f9f9;border-radius:8px;padding:20px 24px;font-size:14px;line-height:2">
+  <p style="margin:0 0 10px;font-weight:bold">📌 关于本站</p>
+  <p style="margin:0 0 16px;color:#555">内容自动翻译自海外科技媒体，仅供个人学习参考。</p>
+  <p style="margin:0 0 8px;font-weight:bold">🛠️ 站长的同款工具</p>
+  <ul style="margin:0 0 16px;padding-left:20px;color:#555">
+    <li>主机：<a href="https://zfuye.org/3528.html" target="_blank" rel="nofollow">Hostinger</a>（$2.99/月起）</li>
+    <li>域名：<a href="https://www.namecheap.com" target="_blank" rel="nofollow">Namecheap</a></li>
+    <li>AI工具：GitHub Copilot</li>
+  </ul>
+  <p style="margin:0;color:#888;font-style:italic">你也可以做一台自动赚钱的网站机器 🚀</p>
+</div>"""
+
     # 直接发布全文（扫码锁已关闭，等流量上来再开）
     # 如需重新开启扫码锁：取消注释下方两行，注释掉 publish_post(title_cn, content, ...) 这行
     # placeholder = wrap_with_lock(content, "")
