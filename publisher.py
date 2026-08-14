@@ -24,31 +24,39 @@ LOG_PATH = "data/log.json"
 # ── 数据源配置 ────────────────────────────────────────────────────────────────
 SOURCES = [
     # AI副业
-    {"name": "ProductHunt",        "cat": "AI副业",  "type": "rss",
+    {"name": "ProductHunt",           "cat": "AI副业",  "type": "rss",
      "url": "https://www.producthunt.com/feed"},
-    {"name": "Niche Pursuits",      "cat": "AI副业",  "type": "rss",
+    {"name": "Niche Pursuits",        "cat": "AI副业",  "type": "rss",
      "url": "https://www.nichepursuits.com/feed/"},
+    {"name": "Authority Hacker",      "cat": "AI副业",  "type": "rss",
+     "url": "https://www.authorityhacker.com/feed/"},
 
     # 海外接单
-    {"name": "Entrepreneur",       "cat": "海外接单", "type": "rss",
+    {"name": "Entrepreneur",          "cat": "海外接单", "type": "rss",
      "url": "https://www.entrepreneur.com/latest.rss"},
-    {"name": "Side Hustle Nation", "cat": "海外接单", "type": "rss",
+    {"name": "Side Hustle Nation",    "cat": "海外接单", "type": "rss",
      "url": "https://www.sidehustlenation.com/feed/"},
+    {"name": "Millo",                 "cat": "海外接单", "type": "rss",
+     "url": "https://millo.co/feed"},
 
     # 信息差·副业
-    {"name": "Medium·副业",        "cat": "信息差",   "type": "rss",
+    {"name": "Medium·副业",           "cat": "信息差",   "type": "rss",
      "url": "https://medium.com/feed/tag/side-hustle"},
-    {"name": "Medium·创业",        "cat": "信息差",   "type": "rss",
+    {"name": "Medium·创业",           "cat": "信息差",   "type": "rss",
      "url": "https://medium.com/feed/tag/entrepreneurship"},
+    {"name": "Making Sense of Cents", "cat": "信息差",   "type": "rss",
+     "url": "https://www.makingsenseofcents.com/feed"},
 
     # 被动收入
-    {"name": "Medium·被动收入",    "cat": "被动收入", "type": "rss",
+    {"name": "Medium·被动收入",       "cat": "被动收入", "type": "rss",
      "url": "https://medium.com/feed/tag/passive-income"},
-    {"name": "Smart Passive Income","cat": "被动收入","type": "rss",
+    {"name": "Smart Passive Income",  "cat": "被动收入", "type": "rss",
      "url": "https://www.smartpassiveincome.com/feed/"},
+    {"name": "Passive Income Pathways","cat": "被动收入","type": "rss",
+     "url": "https://passiveincomepathways.com/feed/"},
 
     # 跨境电商
-    {"name": "Entrepreneur·电商",  "cat": "跨境电商", "type": "rss",
+    {"name": "Entrepreneur·电商",     "cat": "跨境电商", "type": "rss",
      "url": "https://www.entrepreneur.com/topic/ecommerce.rss"},
 ]
 
